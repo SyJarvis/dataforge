@@ -1,0 +1,21 @@
+name: sft_text
+task_type: sft
+input_path: ../examples/text_seeds.jsonl
+media_root: ../examples
+prompt_template: ../prompts/sft/generate.jinja2
+output_dir: ../runs
+model:
+  provider: openai
+  # Set a model available to your API account before running.
+  model: REPLACE_WITH_YOUR_MODEL
+  max_output_tokens: 2048
+  timeout_seconds: 60
+  max_retries: 2
+concurrency: 2
+samples_per_seed: 1
+quality:
+  min_chars: 10
+  max_chars: 20000
+  deduplicate: true
+validation_fraction: 0.2
+split_seed: 42

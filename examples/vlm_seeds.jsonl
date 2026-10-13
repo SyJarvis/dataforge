@@ -1,0 +1,1 @@
+{"id":"shapes_001","source_id":"shapes_image","group_id":"shapes_image","prompt":[{"role":"user","content":[{"type":"image","uri":"assets/shapes.png"},{"type":"text","text":"这张图有几个圆形？圆形分别是什么颜色？"}]}],"variables":{"style":"用一句中文回答。"}}

@@ -1,0 +1,5 @@
+{"id":"math_001","source_id":"arithmetic","group_id":"arithmetic","prompt":[{"role":"user","content":[{"type":"text","text":"小林有 12 本书，借给朋友 5 本，又买了 3 本。现在手上有几本书？请给出计算过程。"}]}],"variables":{"style":"适合小学生理解，先列算式再给答案。"}}
+{"id":"python_001","source_id":"python_basics","group_id":"python_basics","prompt":[{"role":"system","content":[{"type":"text","text":"你是一位耐心的 Python 教师。"}]},{"role":"user","content":[{"type":"text","text":"写一个 Python 函数，返回列表中所有偶数的平方，并举一个简单例子。"}]}],"variables":{"style":"简洁说明，保留代码块与缩进。"}}
+{"id":"reading_001","source_id":"garden_note","group_id":"garden_note","prompt":[{"role":"user","content":[{"type":"text","text":"阅读：周一小雨给花园里的薄荷浇水，周三发现土壤仍然湿润，因此没有继续浇水。问题：小雨周三为什么没有浇水？请仅根据原文回答。"}]}]}
+{"id":"rewrite_001","source_id":"meeting_note","group_id":"meeting_note","prompt":[{"role":"user","content":[{"type":"text","text":"把这句话改写得更清楚，保留全部信息：明天下午三点会议室讨论新版数据格式，参加的人提前看文档。"}]}]}
+{"id":"reason_001","source_id":"inventory","group_id":"inventory","prompt":[{"role":"user","content":[{"type":"text","text":"仓库有三箱螺丝，每箱数量不明。仅凭这些信息能算出螺丝总数吗？请说明原因。"}]}]}

@@ -1,0 +1,16 @@
+name: sft_vlm
+task_type: sft
+input_path: ../examples/vlm_seeds.jsonl
+media_root: ../examples
+prompt_template: ../prompts/vlm/qa.jinja2
+output_dir: ../runs
+model:
+  provider: anthropic
+  # Set a vision-capable model available to your API account before running.
+  model: REPLACE_WITH_YOUR_MODEL
+  vision: true
+  max_output_tokens: 1024
+  timeout_seconds: 60
+  max_retries: 2
+concurrency: 2
+validation_fraction: 0.0
