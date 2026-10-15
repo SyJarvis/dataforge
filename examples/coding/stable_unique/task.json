@@ -1,0 +1,200 @@
+{
+  "schema_version": "1.0",
+  "id": "stable_unique",
+  "title": "按首次出现顺序去重",
+  "task_kind": "function_implementation",
+  "prompt": "实现函数 stable_unique(nums: list[int]) -> list[int]。nums 是有限整数列表，可为空，允许负数、零和重复值；整数不含布尔值。返回一个列表，每个不同整数只保留一次，并严格按照它在 nums 中首次出现的顺序排列。不要排序，也不要保留最后一次出现的位置。例如 [3, 1, 3, 2, 1] 返回 [3, 1, 2]；空列表返回空列表。不得修改输入列表。输入保证满足上述类型，不要求额外类型校验，有效输入不应抛出异常。可以使用 Python 标准库，但函数不得读取输入、打印或执行其他 I/O。",
+  "entry_point": "stable_unique",
+  "signature": "stable_unique(nums: list[int]) -> list[int]",
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true,
+  "cases": [
+    {
+      "id": "first_occurrence_example",
+      "visibility": "public",
+      "args": [
+        [
+          3,
+          1,
+          3,
+          2,
+          1
+        ]
+      ],
+      "expected": [
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "id": "already_unique",
+      "visibility": "public",
+      "args": [
+        [
+          5,
+          -1,
+          0
+        ]
+      ],
+      "expected": [
+        5,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "empty",
+      "visibility": "hidden",
+      "args": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "id": "single",
+      "visibility": "hidden",
+      "args": [
+        [
+          -8
+        ]
+      ],
+      "expected": [
+        -8
+      ]
+    },
+    {
+      "id": "all_equal",
+      "visibility": "hidden",
+      "args": [
+        [
+          7,
+          7,
+          7,
+          7
+        ]
+      ],
+      "expected": [
+        7
+      ]
+    },
+    {
+      "id": "negative_zero_interleaving",
+      "visibility": "hidden",
+      "args": [
+        [
+          0,
+          -3,
+          -3,
+          2,
+          0,
+          -1,
+          2
+        ]
+      ],
+      "expected": [
+        0,
+        -3,
+        2,
+        -1
+      ]
+    },
+    {
+      "id": "unsorted_separated_repeats",
+      "visibility": "hidden",
+      "args": [
+        [
+          9,
+          2,
+          7,
+          2,
+          9,
+          1
+        ]
+      ],
+      "expected": [
+        9,
+        2,
+        7,
+        1
+      ]
+    },
+    {
+      "id": "large_signed_integers",
+      "visibility": "hidden",
+      "args": [
+        [
+          1000000000000000000000000,
+          -1000000000000000000000000,
+          0,
+          1000000000000000000000000,
+          -1000000000000000000000000
+        ]
+      ],
+      "expected": [
+        1000000000000000000000000,
+        -1000000000000000000000000,
+        0
+      ]
+    },
+    {
+      "id": "descending_duplicates",
+      "visibility": "hidden",
+      "args": [
+        [
+          5,
+          4,
+          3,
+          5,
+          2,
+          4,
+          1
+        ]
+      ],
+      "expected": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "id": "last_occurrence_differs",
+      "visibility": "hidden",
+      "args": [
+        [
+          1,
+          2,
+          1,
+          3,
+          2
+        ]
+      ],
+      "expected": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/sorted_values.py",
+      "description": "去重后按数值排序，丢失首次出现顺序。"
+    },
+    {
+      "file": "mutants/last_occurrence.py",
+      "description": "按最后一次出现的位置保留元素，错误处理间隔重复值。"
+    },
+    {
+      "file": "mutants/in_place.py",
+      "description": "返回值正确，但原地替换输入列表违反输入不变约束。"
+    }
+  ]
+}

@@ -6,8 +6,9 @@ from pathlib import Path
 
 import typer
 
+from dataforge.coding import check_coding_pack
 from dataforge.config import load_config
-from dataforge.datasets.io import read_jsonl
+from dataforge.datasets.io import read_jsonl, write_jsonl
 from dataforge.quality.report import dataset_report
 from dataforge.runner import run_pipeline
 from dataforge.schemas import sample_adapter
@@ -17,7 +18,7 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command()
 def run(config: Path, resume: bool = typer.Option(False, "--resume")) -> None:
-    """Generate, clean, analyze, and export a configured SFT run."""
+    """Generate, clean, analyze, and export a configured SFT or RLVR run."""
     try:
         report = asyncio.run(run_pipeline(load_config(config), resume=resume))
     except Exception as error:
@@ -30,7 +31,7 @@ def run(config: Path, resume: bool = typer.Option(False, "--resume")) -> None:
 
 @app.command()
 def validate(file: Path) -> None:
-    """Validate an internal SFT, preference, or RL-task JSONL file."""
+    """Validate an internal SFT, preference, RLVR, or legacy RL-task JSONL file."""
     try:
         count = 0
         for count, row in enumerate(read_jsonl(file), start=1):
@@ -52,3 +53,21 @@ def analyze(file: Path) -> None:
     except Exception as error:
         typer.echo(f"Analysis failed: {error}", err=True)
         raise typer.Exit(1) from error
+
+
+@app.command("check-coding-pack")
+def check_coding_pack_command(
+    directory: Path,
+    output: Path | None = typer.Option(None, "--output"),
+) -> None:
+    """Check trusted author assets with timeouts; NOT a sandbox for model-generated code."""
+    try:
+        report = check_coding_pack(directory)
+        if output is not None:
+            write_jsonl(output, [report])
+    except Exception as error:
+        typer.echo(f"Coding pack check failed: {error}", err=True)
+        raise typer.Exit(1) from error
+    typer.echo(json.dumps(report, ensure_ascii=False, indent=2))
+    if not report["passed"]:
+        raise typer.Exit(1)

@@ -1,0 +1,227 @@
+{
+  "schema_version": "1.0",
+  "id": "chunk_list",
+  "title": "按固定大小切分列表",
+  "task_kind": "function_implementation",
+  "prompt": "实现函数 chunk_list(items: list[int], k: int) -> list[list[int]]。items 是有限整数列表，可为空，允许负数、零和重复值；k 是整数，所有整数不含布尔值。当 k <= 0 时必须抛出 ValueError，即使 items 为空也必须抛出；异常消息不作要求。当 k > 0 时，将 items 按原顺序从左到右切分为长度最多为 k 的连续块，除最后一块外每块长度均为 k。最后不足 k 个元素时必须保留，不得补齐或丢弃，空列表返回 []。例如 items=[1, 2, 3, 4, 5]、k=2 时返回 [[1, 2], [3, 4], [5]]。不得修改输入列表。输入保证满足上述类型，不要求额外类型校验，k > 0 时不应抛出异常。可以使用 Python 标准库，但函数不得读取输入、打印或执行其他 I/O。",
+  "entry_point": "chunk_list",
+  "signature": "chunk_list(items: list[int], k: int) -> list[list[int]]",
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true,
+  "cases": [
+    {
+      "id": "tail_example",
+      "visibility": "public",
+      "args": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        2
+      ],
+      "expected": [
+        [
+          1,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          5
+        ]
+      ]
+    },
+    {
+      "id": "larger_than_input",
+      "visibility": "public",
+      "args": [
+        [
+          8,
+          9
+        ],
+        5
+      ],
+      "expected": [
+        [
+          8,
+          9
+        ]
+      ]
+    },
+    {
+      "id": "empty_positive",
+      "visibility": "hidden",
+      "args": [
+        [],
+        3
+      ],
+      "expected": []
+    },
+    {
+      "id": "unit_chunks",
+      "visibility": "hidden",
+      "args": [
+        [
+          0,
+          -1,
+          -1,
+          5
+        ],
+        1
+      ],
+      "expected": [
+        [
+          0
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          5
+        ]
+      ]
+    },
+    {
+      "id": "exact_multiple",
+      "visibility": "hidden",
+      "args": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        3
+      ],
+      "expected": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "mixed_tail",
+      "visibility": "hidden",
+      "args": [
+        [
+          10,
+          -2,
+          7,
+          7,
+          0,
+          9,
+          -4
+        ],
+        3
+      ],
+      "expected": [
+        [
+          10,
+          -2,
+          7
+        ],
+        [
+          7,
+          0,
+          9
+        ],
+        [
+          -4
+        ]
+      ]
+    },
+    {
+      "id": "single_large_chunk",
+      "visibility": "hidden",
+      "args": [
+        [
+          -7
+        ],
+        100
+      ],
+      "expected": [
+        [
+          -7
+        ]
+      ]
+    },
+    {
+      "id": "zero_nonempty",
+      "visibility": "hidden",
+      "args": [
+        [
+          1,
+          2
+        ],
+        0
+      ],
+      "raises": "ValueError"
+    },
+    {
+      "id": "zero_empty",
+      "visibility": "hidden",
+      "args": [
+        [],
+        0
+      ],
+      "raises": "ValueError"
+    },
+    {
+      "id": "negative_nonempty",
+      "visibility": "hidden",
+      "args": [
+        [
+          1,
+          2
+        ],
+        -3
+      ],
+      "raises": "ValueError"
+    },
+    {
+      "id": "negative_empty",
+      "visibility": "hidden",
+      "args": [
+        [],
+        -1
+      ],
+      "raises": "ValueError"
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/drop_tail.py",
+      "description": "仅输出完整块，错误丢弃长度不足 k 的末块。"
+    },
+    {
+      "file": "mutants/empty_before_validation.py",
+      "description": "空列表提前返回，遗漏 k 非正时仍须抛出 ValueError 的约束。"
+    },
+    {
+      "file": "mutants/consume_input.py",
+      "description": "切块时从原列表删除元素，返回值正确但破坏输入。"
+    }
+  ]
+}

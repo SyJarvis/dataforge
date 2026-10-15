@@ -1,0 +1,349 @@
+{
+  "schema_version": "1.0",
+  "id": "dedup_records",
+  "title": "修复按时间戳去重记录",
+  "task_kind": "bug_fix",
+  "entry_point": "dedup_records",
+  "signature": "dedup_records(records: list[dict]) -> list[dict]",
+  "starter_file": "buggy.py",
+  "prompt": "修复 buggy.py 中的 dedup_records(records: list[dict]) -> list[dict]，保留函数名和签名。每条记录恰有 id、timestamp、value 三个字段：id 是字符串，timestamp 是整数（可以为负数），value 是任意 JSON 值。相同 id 只保留 timestamp 最大的整条记录；最大 timestamp 并列时，保留输入中最后出现的那条。按 id 的 Python 字符串字典序升序返回所选记录列表，空输入返回空列表。初始实现没有正确处理时间戳。不得修改输入列表、记录字典或其中嵌套的 value，不使用第三方依赖。",
+  "cases": [
+    {
+      "id": "public_sorted_output",
+      "visibility": "public",
+      "args": [
+        [
+          {
+            "id": "b",
+            "timestamp": 2,
+            "value": "B"
+          },
+          {
+            "id": "a",
+            "timestamp": 1,
+            "value": "A"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "timestamp": 1,
+          "value": "A"
+        },
+        {
+          "id": "b",
+          "timestamp": 2,
+          "value": "B"
+        }
+      ]
+    },
+    {
+      "id": "public_increasing_timestamp",
+      "visibility": "public",
+      "args": [
+        [
+          {
+            "id": "x",
+            "timestamp": 1,
+            "value": "old"
+          },
+          {
+            "id": "x",
+            "timestamp": 3,
+            "value": "new"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "x",
+          "timestamp": 3,
+          "value": "new"
+        }
+      ]
+    },
+    {
+      "id": "hidden_empty",
+      "visibility": "hidden",
+      "args": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "id": "hidden_older_arrives_last",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "x",
+            "timestamp": 8,
+            "value": "new"
+          },
+          {
+            "id": "x",
+            "timestamp": 2,
+            "value": "old"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "x",
+          "timestamp": 8,
+          "value": "new"
+        }
+      ]
+    },
+    {
+      "id": "hidden_equal_timestamp",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "x",
+            "timestamp": 8,
+            "value": "first"
+          },
+          {
+            "id": "x",
+            "timestamp": 8,
+            "value": "last"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "x",
+          "timestamp": 8,
+          "value": "last"
+        }
+      ]
+    },
+    {
+      "id": "hidden_negative_timestamps",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "x",
+            "timestamp": -1,
+            "value": true
+          },
+          {
+            "id": "x",
+            "timestamp": -5,
+            "value": false
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "x",
+          "timestamp": -1,
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "hidden_lexical_ids",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "2",
+            "timestamp": 0,
+            "value": 2
+          },
+          {
+            "id": "10",
+            "timestamp": 0,
+            "value": 10
+          },
+          {
+            "id": "a",
+            "timestamp": 0,
+            "value": null
+          },
+          {
+            "id": "A",
+            "timestamp": 0,
+            "value": []
+          },
+          {
+            "id": "",
+            "timestamp": 0,
+            "value": {}
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "",
+          "timestamp": 0,
+          "value": {}
+        },
+        {
+          "id": "10",
+          "timestamp": 0,
+          "value": 10
+        },
+        {
+          "id": "2",
+          "timestamp": 0,
+          "value": 2
+        },
+        {
+          "id": "A",
+          "timestamp": 0,
+          "value": []
+        },
+        {
+          "id": "a",
+          "timestamp": 0,
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "hidden_nested_json_values",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "a",
+            "timestamp": 4,
+            "value": {
+              "items": [
+                1,
+                null,
+                {
+                  "ok": true
+                }
+              ]
+            }
+          },
+          {
+            "id": "a",
+            "timestamp": 2,
+            "value": [
+              "old"
+            ]
+          },
+          {
+            "id": "b",
+            "timestamp": 0,
+            "value": 1.5
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "timestamp": 4,
+          "value": {
+            "items": [
+              1,
+              null,
+              {
+                "ok": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "b",
+          "timestamp": 0,
+          "value": 1.5
+        }
+      ]
+    },
+    {
+      "id": "hidden_tie_after_older",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "x",
+            "timestamp": 9,
+            "value": "first"
+          },
+          {
+            "id": "x",
+            "timestamp": 3,
+            "value": "old"
+          },
+          {
+            "id": "x",
+            "timestamp": 9,
+            "value": "last"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "x",
+          "timestamp": 9,
+          "value": "last"
+        }
+      ]
+    },
+    {
+      "id": "hidden_preserve_order",
+      "visibility": "hidden",
+      "args": [
+        [
+          {
+            "id": "z",
+            "timestamp": 3,
+            "value": "Z"
+          },
+          {
+            "id": "a",
+            "timestamp": 2,
+            "value": "A"
+          },
+          {
+            "id": "z",
+            "timestamp": 1,
+            "value": "old"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "timestamp": 2,
+          "value": "A"
+        },
+        {
+          "id": "z",
+          "timestamp": 3,
+          "value": "Z"
+        }
+      ]
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/last_arrival.py",
+      "description": "相同 id 无条件保留最后到达记录，忽略时间戳。"
+    },
+    {
+      "file": "mutants/first_timestamp_tie.py",
+      "description": "最大时间戳并列时错误保留首次记录。"
+    },
+    {
+      "file": "mutants/sort_input.py",
+      "description": "结果正确但原地排序输入列表，违反输入不可修改约定。"
+    }
+  ],
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true
+}
