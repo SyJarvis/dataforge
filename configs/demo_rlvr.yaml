@@ -1,0 +1,17 @@
+name: demo_rlvr
+task_type: rlvr
+input_path: ../examples/rlvr_seeds.jsonl
+media_root: ../examples
+prompt_template: ../prompts/rlvr/solve.jinja2
+output_dir: ../runs
+model:
+  provider: mock
+  model: offline-rlvr-demo
+concurrency: 2
+samples_per_seed: 1
+quality:
+  min_chars: 1
+  max_chars: 20000
+  deduplicate: true
+validation_fraction: 0.2
+split_seed: 42

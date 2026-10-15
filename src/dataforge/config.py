@@ -39,7 +39,7 @@ class QualityConfig(StrictModel):
 
 class RunConfig(StrictModel):
     name: str = Field(pattern=r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
-    task_type: Literal["sft"] = "sft"
+    task_type: Literal["sft", "rlvr"] = "sft"
     input_path: Path
     media_root: Path
     prompt_template: Path

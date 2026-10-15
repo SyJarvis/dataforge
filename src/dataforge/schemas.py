@@ -2,7 +2,9 @@
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
+
+from dataforge.verifiers import validate_reference
 
 
 class StrictModel(BaseModel):
@@ -60,6 +62,20 @@ class Seed(StrictModel):
     _validate_prompt = field_validator("prompt")(validate_prompt)
 
 
+class RLVRSeed(Seed):
+    verifier: Literal["exact_match", "math_answer"]
+    reference: dict[str, Any]
+
+    @model_validator(mode="after")
+    def validate_rlvr(self):
+        if any(
+            isinstance(block, ImageBlock) for message in self.prompt for block in message.content
+        ):
+            raise ValueError("RLVR supports text-only prompts")
+        self.reference = validate_reference(self.verifier, self.reference)
+        return self
+
+
 class SampleBase(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     id: str = Field(min_length=1)
@@ -92,7 +108,24 @@ class RLTaskSample(SampleBase):
     verifier: str = Field(min_length=1)
 
 
-Sample = Annotated[SFTSample | PreferenceSample | RLTaskSample, Field(discriminator="task_type")]
+class RLVRSample(SampleBase):
+    task_type: Literal["rlvr"] = "rlvr"
+    verifier: Literal["exact_match", "math_answer"]
+    reference: dict[str, Any]
+
+    @model_validator(mode="after")
+    def validate_rlvr(self):
+        if any(
+            isinstance(block, ImageBlock) for message in self.prompt for block in message.content
+        ):
+            raise ValueError("RLVR supports text-only prompts")
+        self.reference = validate_reference(self.verifier, self.reference)
+        return self
+
+
+Sample = Annotated[
+    SFTSample | PreferenceSample | RLTaskSample | RLVRSample, Field(discriminator="task_type")
+]
 sample_adapter = TypeAdapter(Sample)
 
 
