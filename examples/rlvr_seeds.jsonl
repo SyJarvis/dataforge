@@ -1,0 +1,3 @@
+{"id":"rlvr_multiply_001","source_id":"multiply_6_7","group_id":"multiply_6_7","prompt":[{"role":"user","content":[{"type":"text","text":"计算 6 × 7。"}]}],"verifier":"math_answer","reference":{"answer":"42","tolerance":0}}
+{"id":"rlvr_reading_001","source_id":"code_note","group_id":"code_note","prompt":[{"role":"user","content":[{"type":"text","text":"阅读：仓库今天的出入代号是 42。问题：今天的出入代号是什么？只回答代号。"}]}],"verifier":"exact_match","reference":{"answer":"42","strip":true,"ignore_case":false}}
+{"id":"rlvr_add_001","source_id":"add_2_3","group_id":"add_2_3","prompt":[{"role":"user","content":[{"type":"text","text":"计算 2 + 3。"}]}],"verifier":"math_answer","reference":{"answer":"5","tolerance":0}}

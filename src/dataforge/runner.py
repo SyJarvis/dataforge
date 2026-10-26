@@ -20,8 +20,11 @@ from dataforge.prompting import render_prompt
 from dataforge.providers import create_provider
 from dataforge.quality.report import run_report
 from dataforge.quality.rules import response_issues, sample_issues
+from dataforge.recipes.rlvr import make_sample as make_rlvr_sample
+from dataforge.recipes.rlvr import prepare_seed
 from dataforge.recipes.sft import make_request, make_sample
-from dataforge.schemas import GenerationResult, Seed
+from dataforge.schemas import GenerationResult, RLVRSeed, Seed
+from dataforge.verifiers import verify_answer
 
 
 def _digest(value: bytes) -> str:
@@ -78,13 +81,23 @@ def _read_journal(path: Path) -> list[dict]:
 
 
 def _preflight(config: RunConfig) -> tuple[list[Seed], list[str], dict[str, str], dict]:
-    seeds = [Seed.model_validate(row) for row in read_jsonl(config.input_path)]
+    seed_model = RLVRSeed if config.task_type == "rlvr" else Seed
+    seeds = [seed_model.model_validate(row) for row in read_jsonl(config.input_path)]
     if not seeds:
         raise ValueError("Input contains no seeds")
     ids = [seed.id for seed in seeds]
     if len(set(ids)) != len(ids):
         raise ValueError("Seed IDs must be unique")
-    instructions = [render_prompt(config.prompt_template, seed) for seed in seeds]
+    if config.task_type == "rlvr":
+        seeds = [prepare_seed(seed) for seed in seeds]
+    # Keep reward-only labels out of the generation template's context.
+    instructions = [
+        render_prompt(
+            config.prompt_template,
+            Seed.model_validate(seed.model_dump(include=set(Seed.model_fields))),
+        )
+        for seed in seeds
+    ]
     image_hashes: dict[str, str] = {}
     for seed in seeds:
         for message in seed.prompt:
@@ -224,28 +237,52 @@ async def run_pipeline(config: RunConfig, *, resume: bool = False, provider=None
             issues = response_issues(result)
             sample = None
             duplicate_of = None
+            verification = None
+            seed = seeds[seed_index]
+            if config.task_type == "rlvr":
+                verification = {
+                    "verifier": seed.verifier,
+                    "evaluated": False,
+                    "passed": None,
+                    "reason": issues[0] if issues else None,
+                    "answer": None,
+                }
             if not issues:
-                seed = seeds[seed_index]
-                sample = make_sample(
-                    seed,
-                    result,
-                    task_key,
-                    {
-                        "run_id": config.name,
-                        "seed_id": seed.id,
-                        "candidate_index": candidate_index,
-                        "provider": config.model.provider,
-                        "model": config.model.model,
-                        "model_parameters": config.model.model_dump(mode="json"),
-                        "prompt_sha256": manifest["prompt_sha256"],
-                        "variables": seed.variables,
-                        "request_id": result.request_id,
-                    },
-                )
+                metadata = {
+                    "run_id": config.name,
+                    "seed_id": seed.id,
+                    "candidate_index": candidate_index,
+                    "provider": config.model.provider,
+                    "model": config.model.model,
+                    "model_parameters": config.model.model_dump(mode="json"),
+                    "prompt_sha256": manifest["prompt_sha256"],
+                    "variables": seed.variables,
+                    "request_id": result.request_id,
+                }
+                if config.task_type == "rlvr":
+                    sample = make_rlvr_sample(seed, task_key, metadata)
+                    if len(result.text) < config.quality.min_chars:
+                        issues.append("completion_too_short")
+                    elif len(result.text) > config.quality.max_chars:
+                        issues.append("completion_too_long")
+                    if issues:
+                        verification["reason"] = issues[0]
+                    else:
+                        checked = verify_answer(seed.verifier, seed.reference, result.text)
+                        verification.update(
+                            evaluated=True,
+                            passed=checked.passed,
+                            reason=checked.reason,
+                            answer=checked.answer,
+                        )
+                        if not checked.passed:
+                            issues.append(checked.reason)
+                else:
+                    sample = make_sample(seed, result, task_key, metadata)
+                    issues.extend(
+                        sample_issues(sample, config.quality.min_chars, config.quality.max_chars)
+                    )
                 samples.append(sample.model_dump(mode="json"))
-                issues.extend(
-                    sample_issues(sample, config.quality.min_chars, config.quality.max_chars)
-                )
                 if not issues and config.quality.deduplicate:
                     digest = sample_digest(sample, image_hashes)
                     duplicate_of = seen.get(digest)
@@ -254,6 +291,8 @@ async def run_pipeline(config: RunConfig, *, resume: bool = False, provider=None
                     else:
                         seen[digest] = task_key
             assessment = {"sample_id": task_key, "passed": not issues, "reasons": issues}
+            if verification is not None:
+                assessment["verification"] = verification
             if duplicate_of:
                 assessment["duplicate_of"] = duplicate_of
             quality.append(assessment)
@@ -276,7 +315,13 @@ async def run_pipeline(config: RunConfig, *, resume: bool = False, provider=None
         ):
             write_jsonl(run_dir / f"{name}.jsonl", rows)
         report = run_report(
-            samples, clean, rejected, ordered_raw, expected=len(tasks), failed=len(failed)
+            samples,
+            clean,
+            rejected,
+            ordered_raw,
+            expected=len(tasks),
+            failed=len(failed),
+            quality=quality,
         )
         report["splits"] = export_splits(
             accepted_models,

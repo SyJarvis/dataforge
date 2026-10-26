@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "id": "parse_config",
+  "title": "解析简单键值配置",
+  "task_kind": "function_implementation",
+  "entry_point": "parse_config",
+  "signature": "parse_config(text: str) -> dict[str, str]",
+  "prompt": "实现 parse_config(text: str) -> dict[str, str]。输入为配置文本，返回键值字典。逐行去掉首尾空白，忽略空行和首个非空字符为 # 的整行注释。每个有效行仅按第一个 = 分成 key 和 value，再去掉二者首尾空白；key 不得为空，value 可以为空。重复 key 由最后一行覆盖。value 内部的 = 和 # 必须原样保留，不存在行内注释。非注释的有效行若缺少 = 或 key 为空，立即抛出 ValueError。本格式没有节、转义处理或插值。输入保证是字符串；不得修改输入，不使用第三方依赖。",
+  "cases": [
+    {
+      "id": "public_basic",
+      "visibility": "public",
+      "args": [
+        "host=localhost\nport=8080"
+      ],
+      "expected": {
+        "host": "localhost",
+        "port": "8080"
+      }
+    },
+    {
+      "id": "public_whitespace_comments",
+      "visibility": "public",
+      "args": [
+        "  # settings\n\n name = Alice  \n"
+      ],
+      "expected": {
+        "name": "Alice"
+      }
+    },
+    {
+      "id": "hidden_duplicate_last_wins",
+      "visibility": "hidden",
+      "args": [
+        "mode=slow\nmode=fast"
+      ],
+      "expected": {
+        "mode": "fast"
+      }
+    },
+    {
+      "id": "hidden_empty_value",
+      "visibility": "hidden",
+      "args": [
+        "enabled= \nname=ok"
+      ],
+      "expected": {
+        "enabled": "",
+        "name": "ok"
+      }
+    },
+    {
+      "id": "hidden_equals_in_value",
+      "visibility": "hidden",
+      "args": [
+        "token=a=b=="
+      ],
+      "expected": {
+        "token": "a=b=="
+      }
+    },
+    {
+      "id": "hidden_hash_in_value",
+      "visibility": "hidden",
+      "args": [
+        "url=https://example.invalid/#part\nnote=a # b"
+      ],
+      "expected": {
+        "url": "https://example.invalid/#part",
+        "note": "a # b"
+      }
+    },
+    {
+      "id": "hidden_missing_equals",
+      "visibility": "hidden",
+      "args": [
+        "valid=yes\nbroken"
+      ],
+      "raises": "ValueError"
+    },
+    {
+      "id": "hidden_empty_key",
+      "visibility": "hidden",
+      "args": [
+        " =oops"
+      ],
+      "raises": "ValueError"
+    },
+    {
+      "id": "hidden_only_comments",
+      "visibility": "hidden",
+      "args": [
+        "\n  # no key here\n\t# = ignored\n"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "hidden_unicode_literal",
+      "visibility": "hidden",
+      "args": [
+        "\t名字\t = \t中文 值 \t\r\n路径 = a\\b"
+      ],
+      "expected": {
+        "名字": "中文 值",
+        "路径": "a\\b"
+      }
+    },
+    {
+      "id": "hidden_empty_input",
+      "visibility": "hidden",
+      "args": [
+        ""
+      ],
+      "expected": {}
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/split_all_equals.py",
+      "description": "对所有等号分割，不能保留 value 内部的等号。"
+    },
+    {
+      "file": "mutants/keep_first_key.py",
+      "description": "重复 key 保留首次值，违反最后覆盖规则。"
+    },
+    {
+      "file": "mutants/inline_comments.py",
+      "description": "误把 value 内部的井号当作行内注释起点。"
+    }
+  ],
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true
+}

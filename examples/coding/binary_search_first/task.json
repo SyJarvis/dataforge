@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "id": "binary_search_first",
+  "title": "修复最左匹配二分查找",
+  "task_kind": "bug_fix",
+  "entry_point": "binary_search_first",
+  "signature": "binary_search_first(nums: list[int], target: int) -> int",
+  "starter_file": "buggy.py",
+  "prompt": "修复 buggy.py 中的 binary_search_first(nums: list[int], target: int) -> int，保留函数名和签名。nums 保证按非降序排列，可能为空或含重复整数。找到 target 时返回它在 nums 中最左边的下标，否则返回 -1。初始实现在存在重复值时可能返回错误位置。必须使用二分查找，时间复杂度要求 O(log n)；不得修改输入列表，不使用第三方依赖。",
+  "cases": [
+    {
+      "id": "public_unique_match",
+      "visibility": "public",
+      "args": [
+        [
+          1,
+          3,
+          5,
+          7
+        ],
+        5
+      ],
+      "expected": 2
+    },
+    {
+      "id": "public_missing",
+      "visibility": "public",
+      "args": [
+        [
+          1,
+          3,
+          5,
+          7
+        ],
+        2
+      ],
+      "expected": -1
+    },
+    {
+      "id": "hidden_empty",
+      "visibility": "hidden",
+      "args": [
+        [],
+        3
+      ],
+      "expected": -1
+    },
+    {
+      "id": "hidden_single_match",
+      "visibility": "hidden",
+      "args": [
+        [
+          5
+        ],
+        5
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_single_missing",
+      "visibility": "hidden",
+      "args": [
+        [
+          5
+        ],
+        6
+      ],
+      "expected": -1
+    },
+    {
+      "id": "hidden_duplicate_middle",
+      "visibility": "hidden",
+      "args": [
+        [
+          1,
+          2,
+          2,
+          2,
+          4
+        ],
+        2
+      ],
+      "expected": 1
+    },
+    {
+      "id": "hidden_all_equal",
+      "visibility": "hidden",
+      "args": [
+        [
+          4,
+          4,
+          4,
+          4
+        ],
+        4
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_first_index",
+      "visibility": "hidden",
+      "args": [
+        [
+          2,
+          4,
+          6,
+          8
+        ],
+        2
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_last_index",
+      "visibility": "hidden",
+      "args": [
+        [
+          2,
+          4,
+          6,
+          8
+        ],
+        8
+      ],
+      "expected": 3
+    },
+    {
+      "id": "hidden_negative_duplicates",
+      "visibility": "hidden",
+      "args": [
+        [
+          -7,
+          -3,
+          -3,
+          -3,
+          0,
+          2
+        ],
+        -3
+      ],
+      "expected": 1
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/any_match.py",
+      "description": "遇到任意相等的中点就返回，未继续寻找最左位置。"
+    },
+    {
+      "file": "mutants/skip_index_zero.py",
+      "description": "最终边界判断排除了合法的下标 0。"
+    },
+    {
+      "file": "mutants/last_match.py",
+      "description": "二分边界方向错误，返回最右相等位置。"
+    }
+  ],
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true
+}

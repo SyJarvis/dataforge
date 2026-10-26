@@ -8,11 +8,11 @@ from pathlib import Path
 
 from dataforge.datasets.io import write_jsonl
 from dataforge.datasets.media import resolve_image
-from dataforge.schemas import SFTSample
+from dataforge.schemas import RLVRSample, SFTSample
 
 
 def export_splits(
-    samples: list[SFTSample],
+    samples: list[SFTSample | RLVRSample],
     output_dir: Path,
     media_root: Path,
     image_hashes: dict[str, str],
@@ -24,9 +24,10 @@ def export_splits(
         group = sample.group_id or sample.source_id or sample.id
         digest = hashlib.sha256(f"{split_seed}:{group}".encode()).digest()
         validation = int.from_bytes(digest, "big") / (1 << 256) < validation_fraction
-        messages = (
-            sample.model_dump(mode="json")["prompt"] + sample.model_dump(mode="json")["completion"]
-        )
+        data = sample.model_dump(mode="json")
+        messages = data["prompt"]
+        if sample.task_type == "sft":
+            messages += data["completion"]
         has_image = any(
             block["type"] == "image" for message in messages for block in message["content"]
         )
@@ -66,6 +67,8 @@ def export_splits(
                 if block["uri"] not in images:
                     images.append(block["uri"])
         row = {"id": sample.id, "group_id": group, "messages": messages}
+        if sample.task_type == "rlvr":
+            row.update(task_type="rlvr", reference=data["reference"], verifier=sample.verifier)
         if has_image:
             row["images"] = images
         splits["validation" if validation else "train"].append(row)

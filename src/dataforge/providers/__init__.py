@@ -17,4 +17,4 @@ def create_provider(config: ModelConfig, media_root: Path) -> ModelProvider:
         return AnthropicProvider(config, media_root)
     from dataforge.providers.mock_provider import MockProvider
 
-    return MockProvider()
+    return MockProvider(final_answer="42" if config.model == "offline-rlvr-demo" else None)

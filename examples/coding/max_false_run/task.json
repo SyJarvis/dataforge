@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.0",
+  "id": "max_false_run",
+  "title": "最长连续 False 片段",
+  "task_kind": "function_implementation",
+  "entry_point": "max_false_run",
+  "signature": "max_false_run(flags: list[bool]) -> int",
+  "prompt": "实现 max_false_run(flags: list[bool]) -> int。返回列表中最长连续 False 片段的长度。True 会中断当前 False 片段；多个不相邻的 False 片段不能合并计数。空列表或全部为 True 时返回 0。输入保证只包含布尔值，不含整数或其他类型。不得修改输入列表，不使用第三方依赖。",
+  "cases": [
+    {
+      "id": "public_basic",
+      "visibility": "public",
+      "args": [
+        [
+          false,
+          false,
+          true
+        ]
+      ],
+      "expected": 2
+    },
+    {
+      "id": "public_empty",
+      "visibility": "public",
+      "args": [
+        []
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_all_false",
+      "visibility": "hidden",
+      "args": [
+        [
+          false,
+          false,
+          false,
+          false
+        ]
+      ],
+      "expected": 4
+    },
+    {
+      "id": "hidden_all_true",
+      "visibility": "hidden",
+      "args": [
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_trailing_longest",
+      "visibility": "hidden",
+      "args": [
+        [
+          false,
+          true,
+          false,
+          false,
+          false
+        ]
+      ],
+      "expected": 3
+    },
+    {
+      "id": "hidden_middle_longest",
+      "visibility": "hidden",
+      "args": [
+        [
+          true,
+          false,
+          false,
+          false,
+          true,
+          false
+        ]
+      ],
+      "expected": 3
+    },
+    {
+      "id": "hidden_separated_runs",
+      "visibility": "hidden",
+      "args": [
+        [
+          false,
+          false,
+          true,
+          false,
+          false
+        ]
+      ],
+      "expected": 2
+    },
+    {
+      "id": "hidden_single_false",
+      "visibility": "hidden",
+      "args": [
+        [
+          false
+        ]
+      ],
+      "expected": 1
+    },
+    {
+      "id": "hidden_single_true",
+      "visibility": "hidden",
+      "args": [
+        [
+          true
+        ]
+      ],
+      "expected": 0
+    },
+    {
+      "id": "hidden_leading_longest",
+      "visibility": "hidden",
+      "args": [
+        [
+          false,
+          false,
+          false,
+          true,
+          false,
+          true
+        ]
+      ],
+      "expected": 3
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/count_all_false.py",
+      "description": "统计所有 False 总数，错误合并不相邻片段。"
+    },
+    {
+      "file": "mutants/drop_trailing_run.py",
+      "description": "仅遇到 True 时更新最大值，遗漏末尾 False 片段。"
+    },
+    {
+      "file": "mutants/count_true_runs.py",
+      "description": "分支方向写反，计算了最长连续 True 片段。"
+    }
+  ],
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true
+}

@@ -1,0 +1,374 @@
+{
+  "schema_version": "1.0",
+  "id": "deep_merge",
+  "title": "递归合并 JSON 对象",
+  "task_kind": "function_implementation",
+  "prompt": "实现函数 deep_merge(left: dict, right: dict) -> dict。left 和 right 是有限、无循环的 JSON 对象，键均为字符串；值可为对象、数组、字符串、有限数字、布尔值或 null，不含 NaN、Infinity 等非 JSON 数值。返回合并后的对象，保留只在任一边出现的字段。对于同名字段，仅当左右值都是对象（Python dict）时递归合并；其他所有冲突均由 right 的值完全覆盖 left 的值。数组必须整体替换，不能拼接，也不能按下标或元素递归合并。例如 {\"x\": {\"a\": 1, \"b\": 2}, \"tags\": [1]} 与 {\"x\": {\"b\": 3}, \"tags\": [2]} 合并得到 {\"x\": {\"a\": 1, \"b\": 3}, \"tags\": [2]}。空对象遵循相同规则，输入对象和内部所有嵌套容器均不得被修改；不要求返回值与输入之间完全无引用共享。输入保证满足上述条件，不要求额外校验，有效输入不应抛出异常。可以使用 Python 标准库，但函数不得读取输入、打印或执行其他 I/O。",
+  "entry_point": "deep_merge",
+  "signature": "deep_merge(left: dict, right: dict) -> dict",
+  "runtime": {
+    "language": "python",
+    "version": "3.13",
+    "timeout_seconds": 2,
+    "memory_mb": 256
+  },
+  "preserve_inputs": true,
+  "cases": [
+    {
+      "id": "flat_override",
+      "visibility": "public",
+      "args": [
+        {
+          "a": 1,
+          "b": 2
+        },
+        {
+          "b": 9,
+          "c": 3
+        }
+      ],
+      "expected": {
+        "a": 1,
+        "b": 9,
+        "c": 3
+      }
+    },
+    {
+      "id": "recursive_and_list_example",
+      "visibility": "public",
+      "args": [
+        {
+          "config": {
+            "host": "local",
+            "port": 80
+          },
+          "tags": [
+            "old"
+          ]
+        },
+        {
+          "config": {
+            "port": 443
+          },
+          "tags": [
+            "new"
+          ]
+        }
+      ],
+      "expected": {
+        "config": {
+          "host": "local",
+          "port": 443
+        },
+        "tags": [
+          "new"
+        ]
+      }
+    },
+    {
+      "id": "both_empty",
+      "visibility": "hidden",
+      "args": [
+        {},
+        {}
+      ],
+      "expected": {}
+    },
+    {
+      "id": "left_only_nested",
+      "visibility": "hidden",
+      "args": [
+        {
+          "a": {
+            "b": [
+              1,
+              {
+                "c": 2
+              }
+            ]
+          }
+        },
+        {}
+      ],
+      "expected": {
+        "a": {
+          "b": [
+            1,
+            {
+              "c": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "right_only_nested",
+      "visibility": "hidden",
+      "args": [
+        {},
+        {
+          "a": {
+            "b": [
+              1,
+              {
+                "c": 2
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "a": {
+          "b": [
+            1,
+            {
+              "c": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "nested_service_settings",
+      "visibility": "hidden",
+      "args": [
+        {
+          "service": {
+            "limits": {
+              "cpu": 2,
+              "mem": 512
+            },
+            "enabled": true
+          },
+          "labels": [
+            "base"
+          ],
+          "keep": null
+        },
+        {
+          "service": {
+            "limits": {
+              "cpu": 4
+            },
+            "region": "east"
+          },
+          "labels": [],
+          "new": false
+        }
+      ],
+      "expected": {
+        "service": {
+          "limits": {
+            "cpu": 4,
+            "mem": 512
+          },
+          "enabled": true,
+          "region": "east"
+        },
+        "labels": [],
+        "keep": null,
+        "new": false
+      }
+    },
+    {
+      "id": "dict_replaced_by_scalar",
+      "visibility": "hidden",
+      "args": [
+        {
+          "x": {
+            "a": 1
+          },
+          "y": [
+            1,
+            2
+          ]
+        },
+        {
+          "x": null,
+          "y": {
+            "a": 2
+          }
+        }
+      ],
+      "expected": {
+        "x": null,
+        "y": {
+          "a": 2
+        }
+      }
+    },
+    {
+      "id": "scalar_replaced_by_dict",
+      "visibility": "hidden",
+      "args": [
+        {
+          "x": 7,
+          "config": null
+        },
+        {
+          "x": {
+            "a": 1
+          },
+          "config": {}
+        }
+      ],
+      "expected": {
+        "x": {
+          "a": 1
+        },
+        "config": {}
+      }
+    },
+    {
+      "id": "nested_lists_replace",
+      "visibility": "hidden",
+      "args": [
+        {
+          "outer": {
+            "items": [
+              1,
+              2
+            ],
+            "keep": "yes"
+          }
+        },
+        {
+          "outer": {
+            "items": [
+              3,
+              4
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "outer": {
+          "items": [
+            3,
+            4
+          ],
+          "keep": "yes"
+        }
+      }
+    },
+    {
+      "id": "empty_dict_keeps_left_fields",
+      "visibility": "hidden",
+      "args": [
+        {
+          "a": {
+            "b": 2
+          },
+          "z": 0
+        },
+        {
+          "a": {}
+        }
+      ],
+      "expected": {
+        "a": {
+          "b": 2
+        },
+        "z": 0
+      }
+    },
+    {
+      "id": "falsy_values_override",
+      "visibility": "hidden",
+      "args": [
+        {
+          "flag": true,
+          "number": 1,
+          "value": null
+        },
+        {
+          "flag": false,
+          "number": 0,
+          "value": "set"
+        }
+      ],
+      "expected": {
+        "flag": false,
+        "number": 0,
+        "value": "set"
+      }
+    },
+    {
+      "id": "arrays_of_objects_replace",
+      "visibility": "hidden",
+      "args": [
+        {
+          "data": [
+            {
+              "a": 1
+            },
+            {
+              "b": 2
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "c": 3
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "data": [
+          {
+            "c": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "three_levels",
+      "visibility": "hidden",
+      "args": [
+        {
+          "a": {
+            "b": {
+              "c": 1,
+              "d": 2
+            },
+            "keep": 3
+          }
+        },
+        {
+          "a": {
+            "b": {
+              "c": 4,
+              "e": 5
+            }
+          }
+        }
+      ],
+      "expected": {
+        "a": {
+          "b": {
+            "c": 4,
+            "d": 2,
+            "e": 5
+          },
+          "keep": 3
+        }
+      }
+    }
+  ],
+  "mutants": [
+    {
+      "file": "mutants/shallow_update.py",
+      "description": "只做顶层覆盖，两个对象发生冲突时丢失左侧嵌套字段。"
+    },
+    {
+      "file": "mutants/concatenate_lists.py",
+      "description": "对象递归合并正确，但数组冲突时错误拼接左右数组。"
+    },
+    {
+      "file": "mutants/mutate_left.py",
+      "description": "原地递归更新 left，合并结果正确但破坏原始输入对象。"
+    }
+  ]
+}
